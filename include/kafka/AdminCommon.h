@@ -66,5 +66,23 @@ struct ListTopicsResult
     Topics topics;
 };
 
-} } } // end of KAFKA_API::clients::admin
+/**
+ * The result of AdminClient::getTopicPartitionMap().
+ */
+struct GetTopicPartitionMapResult
+{
+    explicit GetTopicPartitionMapResult(const Error& err): error(err) {}
+    explicit GetTopicPartitionMapResult(TopicPartitionMap map): topicPartitionMap(std::move(map)) {}
 
+    /**
+     * The result error.
+     */
+    Error  error;
+
+    /**
+     * The topic partitions fetched.
+     */
+    TopicPartitionMap topicPartitionMap;
+};
+
+} } } // end of KAFKA_API::clients::admin

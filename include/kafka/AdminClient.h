@@ -58,6 +58,11 @@ public:
     admin::DeleteRecordsResult deleteRecords(const TopicPartitionOffsets& topicPartitionOffsets,
                                              std::chrono::milliseconds    timeout = std::chrono::milliseconds(DEFAULT_COMMAND_TIMEOUT_MS));
 
+    /**
+     * Get a mapping of Topics to Partitions in the cluster.
+     */
+    admin::GetTopicPartitionMapResult getTopicPartitionMap(std::chrono::milliseconds timeout = std::chrono::milliseconds(DEFAULT_COMMAND_TIMEOUT_MS));
+
 private:
     static std::list<Error> getPerTopicResults(const rd_kafka_topic_result_t** topicResults, std::size_t topicCount);
     static std::list<Error> getPerTopicPartitionResults(const rd_kafka_topic_partition_list_t* partitionResults);
@@ -297,6 +302,31 @@ AdminClient::listTopics(std::chrono::milliseconds timeout)
     return admin::ListTopicsResult(names);
 }
 
+inline admin::GetTopicPartitionMapResult
+AdminClient::getTopicPartitionMap(std::chrono::milliseconds timeout)
+{
+    const rd_kafka_metadata_t* rk_metadata = nullptr;
+    const rd_kafka_resp_err_t err = rd_kafka_metadata(getClientHandle(), true, nullptr, &rk_metadata, convertMsDurationToInt(timeout));
+    auto guard = rd_kafka_metadata_unique_ptr(rk_metadata);
+
+    if (err != RD_KAFKA_RESP_ERR_NO_ERROR)
+    {
+        return admin::GetTopicPartitionMapResult(Error{err, rd_kafka_err2str(err)});
+    }
+
+    TopicPartitionMap map;
+    for (int i = 0; i < rk_metadata->topic_cnt; ++i)
+    {
+        auto partitions = std::vector<Partition>{};
+        for (int j = 0; j < rk_metadata->topics[i].partition_cnt; j++) {
+            const auto partition = rk_metadata->topics[i].partitions[j].id;
+            partitions.push_back(partition);
+        }
+        map[rk_metadata->topics[i].topic] = std::move(partitions);
+    }
+    return admin::GetTopicPartitionMapResult(map);
+}
+
 inline admin::DeleteRecordsResult
 AdminClient::deleteRecords(const TopicPartitionOffsets& topicPartitionOffsets,
                            std::chrono::milliseconds    timeout)
@@ -345,4 +375,3 @@ AdminClient::deleteRecords(const TopicPartitionOffsets& topicPartitionOffsets,
 }
 
 } } } // end of KAFKA_API::clients::admin
-

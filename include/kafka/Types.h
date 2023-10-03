@@ -132,6 +132,11 @@ using TopicPartition        = std::pair<Topic, Partition>;
 using TopicPartitions       = std::set<TopicPartition>;
 
 /**
+ * TopicPartitionMap map.
+ */
+using TopicPartitionMap     = std::map<Topic, std::vector<Partition>>;
+
+/**
  * Topic/Partition/Offset tuple
  */
 using TopicPartitionOffset  = std::tuple<Topic, Partition, Offset>;
@@ -200,4 +205,3 @@ inline std::string toString(const TopicPartitionOffsets& tpos)
 }
 
 } // end of KAFKA_API
-
