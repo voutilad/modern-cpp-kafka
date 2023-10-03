@@ -317,10 +317,16 @@ AdminClient::getTopicPartitionMap(std::chrono::milliseconds timeout)
     TopicPartitionMap map;
     for (int i = 0; i < rk_metadata->topic_cnt; ++i)
     {
-        auto partitions = std::vector<Partition>{};
+      auto partitions = std::map<Partition, std::pair<int32_t, std::set<int32_t>>>{};
         for (int j = 0; j < rk_metadata->topics[i].partition_cnt; j++) {
-            const auto partition = rk_metadata->topics[i].partitions[j].id;
-            partitions.push_back(partition);
+          const auto partition = rk_metadata->topics[i].partitions[j].id;
+          const auto leader = rk_metadata->topics[i].partitions[j].leader;
+          auto followers = std::set<int32_t>{};
+          for (int k = 0; k < rk_metadata->topics[i].partitions[j].replica_cnt; k++) {
+            followers.insert(rk_metadata->topics[i].partitions[j].replicas[k]);
+          }
+          const auto pair = std::pair<int32_t, std::set<int32_t>>{leader, std::move(followers)};
+          partitions[partition] = std::move(pair);
         }
         map[rk_metadata->topics[i].topic] = std::move(partitions);
     }

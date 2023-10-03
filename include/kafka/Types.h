@@ -132,9 +132,10 @@ using TopicPartition        = std::pair<Topic, Partition>;
 using TopicPartitions       = std::set<TopicPartition>;
 
 /**
- * TopicPartitionMap map.
+ * TopicPartitionMap map. Topic -> Partition -> (leader, set of all replicas)
  */
-using TopicPartitionMap     = std::map<Topic, std::vector<Partition>>;
+using TopicPartitionMap
+  = std::map<Topic, std::map<Partition, std::pair<int32_t, std::set<int32_t>>>>;
 
 /**
  * Topic/Partition/Offset tuple
